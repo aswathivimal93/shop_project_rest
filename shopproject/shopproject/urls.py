@@ -16,8 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+#from shop.views import CustomLoginView, CustomLogoutView
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('accounts.urls')),
+    path('', include('shop.urls')),
+   
+
+   # path('api/login/', CustomLoginView.as_view(), name='knox_login'),
+   # path('api/logout/', CustomLogoutView.as_view(), name='knox_logout'),
+   # path('',include('shop.urls')),
     #path('api/auth/', include('knox.urls')),
 ]

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'shop',
     'rest_framework',
     'knox',
+    'accounts',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -84,7 +85,7 @@ WSGI_APPLICATION = 'shopproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'shopproject',
+        'NAME': 'shopprojectDB',
         'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',
@@ -111,7 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'shop.ShopUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
