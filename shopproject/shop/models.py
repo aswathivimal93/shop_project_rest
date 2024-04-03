@@ -38,9 +38,9 @@ class Consumer(models.Model):
     total_debit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     last_payment_date = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(ShopUser, on_delete=models.SET_NULL, null=True,related_name='created_consumers')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,related_name='created_consumers')
     created_on = models.DateTimeField(auto_now_add=True)
-    updated_by = models.ForeignKey(ShopUser, on_delete=models.SET_NULL, null=True,related_name='updated_consumers')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True,related_name='updated_consumers')
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -57,9 +57,9 @@ class Payment(models.Model):
     shop = models.OneToOneField('Shop', on_delete=models.CASCADE)
     type = models.CharField(max_length=6, choices=AMOUNT_CHOICES, default='credit')
     is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(ShopUser, related_name='payments_created', on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, related_name='payments_created', on_delete=models.CASCADE)
     created_on = models.DateTimeField(auto_now_add=True)
-    updated_by = models.ForeignKey(ShopUser, related_name='payments_updated', on_delete=models.CASCADE)
+    updated_by = models.ForeignKey(User, related_name='payments_updated', on_delete=models.CASCADE)
     updated_on = models.DateTimeField(auto_now=True)
 
     # Additional fields specific to credit payments

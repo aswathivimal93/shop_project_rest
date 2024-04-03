@@ -51,7 +51,7 @@ class ShopViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         if not self.request.user.is_superuser:
             raise PermissionDenied("You do not have permission to create Shop.")
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=self.request.user,updated_by=self.request.user)
     
    
 
@@ -65,7 +65,8 @@ class ConsumerViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         if  self.request.user.is_superuser:
             raise PermissionDenied("You do not have permission to create consumer.")
-        serializer.save()
+        serializer.save(created_by=self.request.user,updated_by=self.request.user)
+
 
 
 '''class PaymentViewSet(viewsets.ModelViewSet):
@@ -93,28 +94,35 @@ class PaymentViewSet(viewsets.ModelViewSet):
         try:
             consumer = Consumer.objects.get(code=consumer_code)
         except Consumer.DoesNotExist:
-            return Response({"message": "Consumer not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Consumer not found. Please create the consumer first."}, status=status.HTTP_404_NOT_FOUND)
 
         if payment_type == 'debit':
             consumer.total_debit += amount
         elif payment_type == 'credit':
             consumer.total_credit+=amount
-            consumer.debit -= amount
-
+            consumer.total_debit -= amount
         consumer.save()
-        print(consumer.total_debit)
-        payment_data = {
-            'amount': amount,
-            'consumer': consumer.id,
-            'type': payment_type,
-            'shop': shop_id,
-            'created_by': request.user.id,  
-            'updated_by': request.user.id
-        }
-        print(payment_data)
-        serializer = PaymentSerializer(data=payment_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+         # Check if there's an existing payment for the consumer
+        payment = Payment.objects.filter(consumer=consumer, shop=shop_id).first()
+        if payment:
+            payment.amount = amount
+            payment.type = payment_type
+            payment.updated_by = request.user
+        else:    
+            payment_data = {
+                'amount': amount,
+                'consumer': consumer.id,
+                'type': payment_type,
+                'shop': shop_id,
+                'created_by': request.user.id,  
+                'updated_by': request.user.id
+            }
+            serializer = PaymentSerializer(data=payment_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        payment.save()
+        serializer = PaymentSerializer(payment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
