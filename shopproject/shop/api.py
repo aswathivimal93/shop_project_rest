@@ -1,10 +1,11 @@
-from shop.models import ShopUser,Shop,Consumer
+from shop.models import ShopUser,Shop,Consumer,Payment
 from rest_framework import viewsets,permissions
 from .serializers import ShopUserSerializer,ShopSerializer,ConsumerSerializer,PaymentSerializer,UserSerializer
 from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 
 
@@ -66,7 +67,8 @@ class ConsumerViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You do not have permission to create consumer.")
         serializer.save()
 
-class PaymentViewSet(viewsets.ModelViewSet):
+
+'''class PaymentViewSet(viewsets.ModelViewSet):
     permission_classes=[
        permissions.IsAuthenticated
     ]
@@ -74,6 +76,45 @@ class PaymentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Consumer.objects.filter(created_by=self.request.user)
     def perform_create(self, serializer):
-        ''' if not self.request.user:
-            raise PermissionDenied("")'''
-        serializer.save()
+        serializer.save()'''
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+
+    @action(detail=False, methods=['post'])
+    def make_payment(self, request):
+        consumer_code = request.data.get('consumer_code')
+        amount = request.data.get('amount')
+        payment_type = request.data.get('type')
+        shop_id = request.data.get('shop')  # Assuming you're passing shop ID
+
+
+        try:
+            consumer = Consumer.objects.get(code=consumer_code)
+        except Consumer.DoesNotExist:
+            return Response({"message": "Consumer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if payment_type == 'debit':
+            consumer.total_debit += amount
+        elif payment_type == 'credit':
+            consumer.total_credit+=amount
+            consumer.debit -= amount
+
+        consumer.save()
+        print(consumer.total_debit)
+        payment_data = {
+            'amount': amount,
+            'consumer': consumer.id,
+            'type': payment_type,
+            'shop': shop_id,
+            'created_by': request.user.id,  
+            'updated_by': request.user.id
+        }
+        print(payment_data)
+        serializer = PaymentSerializer(data=payment_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
