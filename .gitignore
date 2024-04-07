@@ -54,4 +54,4 @@ drf_example
 *.pyc
 
 
-shopproject/shopproject/.env
+./shopproject/shopproject/.env
